@@ -1,0 +1,43 @@
+{
+    "res": {
+        "common:static/common/ui/a/a.js": {
+            "uri": "/static/common/ui/a/a.js",
+            "type": "js",
+            "deps": [
+                "common:static/common/ui/b/b.js"
+            ]
+        },
+        "common:static/common/ui/b/b.js": {
+            "uri": "/static/common/ui/b/b.js",
+            "type": "js",
+            "deps": [
+                "common:static/common/ui/c/c.js"
+            ]
+        },
+        "common:static/common/ui/c/c.js": {
+            "uri": "/static/common/ui/b/b.js",
+            "type": "js",
+            "deps": [
+                "common:static/common/ui/a/a.js"
+            ]
+        },
+        "common:static/common/ui/async/async.js": {
+            "uri": "/static/common/ui/async/async.js",
+            "type": "js",
+            "deps": [
+            ]
+        },
+        "common:static/common/index/index.js": {
+            "uri": "/static/common/index/index.js",
+            "type": "js",
+            "deps": [
+                "common:static/common/ui/a/a.js"
+            ],
+            "extras": {
+                "async": [
+                    "common:static/common/ui/async/async.js"
+                ]
+            }
+        }
+    }
+}
