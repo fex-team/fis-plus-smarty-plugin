@@ -66,8 +66,8 @@ class FISResource {
         }
         if(isset(self::$arrMap[$strNamespace]) || self::register($strNamespace, $smarty)) {
             $arrMap = &self::$arrMap[$strNamespace];
-            $arrRes = &$arrMap['res'][$strName];
-            if (isset($arrRes)) {
+            if (isset($arrMap['res'][$strName])) {
+                $arrRes = &$arrMap['res'][$strName];
                 if (!array_key_exists('fis_debug', $_GET) && isset($arrRes['pkg'])) {
                     $arrPkg = &$arrMap['pkg'][$arrRes['pkg']];
                     return $arrPkg['uri'];
@@ -88,9 +88,9 @@ class FISResource {
         $html = '';
         if ($type === 'js') {
             $resourceMap = self::getResourceMap();
-            $loadMoadJs = (self::$framework && (self::$arrStaticCollection['js'] || $resourceMap));
+            $loadModJs = (self::$framework && (isset(self::$arrStaticCollection['js']) || $resourceMap));
             //require.resourceMap要在mod.js加载以后执行
-            if ($loadMoadJs) {
+            if ($loadModJs) {
                 $html .= '<script type="text/javascript" src="' . self::$framework . '"></script>' . PHP_EOL;
             }
             if ($resourceMap) {
@@ -98,7 +98,7 @@ class FISResource {
                 $html .= 'require.resourceMap('.$resourceMap.');';
                 $html .= '</script>';
             }
-            if (self::$arrStaticCollection['js']) {
+            if (isset(self::$arrStaticCollection['js'])) {
                 $arrURIs = &self::$arrStaticCollection['js'];
                 foreach ($arrURIs as $uri) {
                     if ($uri === self::$framework) {
@@ -107,7 +107,7 @@ class FISResource {
                     $html .= '<script type="text/javascript" src="' . $uri . '"></script>' . PHP_EOL;
                 }
             }
-        } else if($type === 'css' && self::$arrStaticCollection['css']){
+        } else if($type === 'css' && isset(self::$arrStaticCollection['css'])){
             $arrURIs = &self::$arrStaticCollection['css'];
             $html = '<link rel="stylesheet" type="text/css" href="' . implode('"/><link rel="stylesheet" type="text/css" href="', $arrURIs) . '"/>';
         }
@@ -213,7 +213,7 @@ class FISResource {
      */
     private static function delAsyncDeps($strName) {
         $arrRes = self::$arrRequireAsyncCollection['res'][$strName];
-        if ($arrRes['pkg']) {
+        if (isset($arrRes['pkg'])) {
             $arrPkg = &self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
             if ($arrPkg) {
                 self::$arrStaticCollection['js'][] = $arrPkg['uri'];
@@ -229,7 +229,7 @@ class FISResource {
             self::$arrStaticCollection['js'][] = self::$arrRequireAsyncCollection['res'][$strName]['uri'];
             unset(self::$arrRequireAsyncCollection['res'][$strName]);
         }
-        if ($arrRes['deps']) {
+        if (isset($arrRes['deps'])) {
             foreach ($arrRes['deps'] as $strDep) {
                 if (isset(self::$arrRequireAsyncCollection['res'][$strDep])) {
                     self::delAsyncDeps($strDep);
@@ -261,10 +261,10 @@ class FISResource {
             }
             if(isset(self::$arrMap[$strNamespace]) || self::register($strNamespace, $smarty)){
                 $arrMap = &self::$arrMap[$strNamespace];
-                $arrRes = &$arrMap['res'][$strName];
                 $arrPkg = null;
                 $arrPkgHas = array();
-                if(isset($arrRes)) {
+                if(isset($arrMap['res'][$strName])) {
+                    $arrRes = &$arrMap['res'][$strName];
                     if(!array_key_exists('fis_debug', $_GET) && isset($arrRes['pkg'])){
                         $arrPkg = &$arrMap['pkg'][$arrRes['pkg']];
                         $strURI = $arrPkg['uri'];

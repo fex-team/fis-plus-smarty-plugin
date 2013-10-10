@@ -24,9 +24,10 @@ class fis_widget_map {
 
 function smarty_compiler_widget($arrParams,  $smarty){
     $strResourceApiPath = preg_replace('/[\\/\\\\]+/', '/', dirname(__FILE__) . '/FISResource.class.php');
-    $strCode = '<?php if(!class_exists(\'FISResource\')){require_once(\'' . $strResourceApiPath . '\');}';
-    $strCall = $arrParams['call'];
-    $bHasCall = isset($strCall);
+    $strCode = '<?php if(!class_exists(\'FISResource\', false)){require_once(\'' . $strResourceApiPath . '\');}';
+
+    $bHasCall = isset($arrParams['call']);
+
     $strName = $arrParams['name'];
     unset($arrParams['name']);
     //construct params
@@ -40,6 +41,7 @@ function smarty_compiler_widget($arrParams,  $smarty){
     }
     $strFuncParams = 'array(' . implode(',', $arrFuncParams) . ')';
     if($bHasCall){
+        $strCall = $arrParams['call'];
         unset($arrParams['call']);
         $strTplFuncName = '\'smarty_template_function_\'.' . $strCall;
         $strCallTplFunc = 'call_user_func('. $strTplFuncName . ',$_smarty_tpl,' . $strFuncParams . ');';
