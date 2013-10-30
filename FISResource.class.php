@@ -223,6 +223,10 @@ class FISResource {
                         self::delAsyncDeps($strHas);
                     }
                 }
+            } else {
+                foreach ($arrPkg['has'] as $strHas) {
+                    unset(self::$arrRequireAsyncCollection['res'][$strHas]);
+                }
             }
         } else {
             //已经分析过的并且在其他文件里同步加载的组件，重新收集在同步输出组
