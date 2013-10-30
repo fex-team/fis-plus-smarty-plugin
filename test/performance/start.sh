@@ -4,6 +4,7 @@ TEST_PATH=/home/work/repos/fis-plus-smarty-plugin/test/performance
 FISP_PATH=/home/work/lib/node_modules/fis-plus
 cd ${TEST_PATH}
 sh product_code_ready.sh
+npm cache clean
 npm update -g fis-plus
 cd ${FISP_PATH}
 npm install fis-preprocessor-inline
