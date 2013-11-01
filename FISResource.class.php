@@ -219,13 +219,10 @@ class FISResource {
                 self::$arrStaticCollection['js'][] = $arrPkg['uri'];
                 unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
                 foreach ($arrPkg['has'] as $strHas) {
+                    unset(self::$arrRequireAsyncCollection['res'][$strHas]);
                     if (isset(self::$arrRequireAsyncCollection['res'][$strHas])) {
                         self::delAsyncDeps($strHas);
                     }
-                }
-            } else {
-                foreach ($arrPkg['has'] as $strHas) {
-                    unset(self::$arrRequireAsyncCollection['res'][$strHas]);
                 }
             }
         } else {
