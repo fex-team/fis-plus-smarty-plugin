@@ -219,11 +219,12 @@ class FISResource {
                 self::$arrStaticCollection['js'][] = $arrPkg['uri'];
                 unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
                 foreach ($arrPkg['has'] as $strHas) {
-                    unset(self::$arrRequireAsyncCollection['res'][$strHas]);
                     if (isset(self::$arrRequireAsyncCollection['res'][$strHas])) {
                         self::delAsyncDeps($strHas);
                     }
                 }
+            } else {
+                unset(self::$arrRequireAsyncCollection['res'][$strName]);
             }
         } else {
             //已经分析过的并且在其他文件里同步加载的组件，重新收集在同步输出组
