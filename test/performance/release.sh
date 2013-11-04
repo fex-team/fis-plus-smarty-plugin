@@ -13,6 +13,7 @@ fisp release -d ${IKNOW_OUTPUT_PATH} --no-color
 
 fisp server install pc --root ${IKNOW_OUTPUT_PATH}
 
-cd ${TEST_PATH}
-cp ../../*.*.php ${IKNOW_OUTPUT_PATH}/plugin
+cd ${IKNOW_OUTPUT_PATH}
+[[ -d plugin/ ]] || mkdir plugin
+cp ../../../../*.*.php ${IKNOW_OUTPUT_PATH}/plugin
 
