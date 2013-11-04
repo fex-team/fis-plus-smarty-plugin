@@ -214,7 +214,7 @@ class FISResource {
     private static function delAsyncDeps($strName) {
         $arrRes = self::$arrRequireAsyncCollection['res'][$strName];
         if (isset($arrRes['pkg'])) {
-            $arrPkg = &self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
+            $arrPkg = self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
             if ($arrPkg) {
                 self::$arrStaticCollection['js'][] = $arrPkg['uri'];
                 unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
