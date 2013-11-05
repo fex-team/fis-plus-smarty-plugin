@@ -280,8 +280,12 @@ class FISResource {
                     if(!array_key_exists('fis_debug', $_GET) && isset($arrRes['pkg'])){
                         $arrPkg = &$arrMap['pkg'][$arrRes['pkg']];
                         $strURI = $arrPkg['uri'];
+
                         foreach ($arrPkg['has'] as $strResId) {
                             self::$arrLoaded[$strResId] = $strURI;
+                        }
+
+                        foreach ($arrPkg['has'] as $strResId) {
                             $arrHasRes = &$arrMap['res'][$strResId];
                             $arrPkgHas[$strResId] = $arrHasRes;
                             self::loadDeps($arrHasRes, $smarty, $async);
