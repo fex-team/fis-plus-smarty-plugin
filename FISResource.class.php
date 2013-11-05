@@ -7,6 +7,8 @@ class FISResource {
 
     private static $arrMap = array();
     private static $arrLoaded = array();
+    private static $arrAsyncDeleted = array();
+
     private static $arrStaticCollection = array();
     //收集require.async组件
     private static $arrRequireAsyncCollection = array();
@@ -23,6 +25,7 @@ class FISResource {
     public static function reset(){
         self::$arrMap = array();
         self::$arrLoaded = array();
+        self::$arrAsyncDeleted = array();
         self::$arrStaticCollection = array();
         self::$arrScriptPool = array();
         self::$framework  = null;
@@ -212,29 +215,36 @@ class FISResource {
      * @param $strName
      */
     private static function delAsyncDeps($strName) {
-        $arrRes = self::$arrRequireAsyncCollection['res'][$strName];
-        if (isset($arrRes['pkg'])) {
-            $arrPkg = self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
-            if ($arrPkg) {
-                self::$arrStaticCollection['js'][] = $arrPkg['uri'];
-                unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
-                foreach ($arrPkg['has'] as $strHas) {
-                    if (isset(self::$arrRequireAsyncCollection['res'][$strHas])) {
-                        self::delAsyncDeps($strHas);
+        if (isset(self::$arrAsyncDeleted[$strName])) {
+            return true;
+        } else {
+            self::$arrAsyncDeleted[$strName] = true;
+            $arrRes = self::$arrRequireAsyncCollection['res'][$strName];
+            if (isset($arrRes['pkg'])) {
+                $arrPkg = self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
+                if ($arrPkg) {
+                    self::$arrStaticCollection['js'][] = $arrPkg['uri'];
+                    unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
+                    foreach ($arrPkg['has'] as $strHas) {
+                        self::$arrLoaded[$strName] = $arrPkg['uri'];
+                        if (isset(self::$arrRequireAsyncCollection['res'][$strHas])) {
+                            self::delAsyncDeps($strHas);
+                        }
                     }
+                } else {
+                    unset(self::$arrRequireAsyncCollection['res'][$strName]);
                 }
             } else {
+                //已经分析过的并且在其他文件里同步加载的组件，重新收集在同步输出组
+                self::$arrStaticCollection['js'][] = self::$arrRequireAsyncCollection['res'][$strName]['uri'];
+                self::$arrLoaded[$strName] = self::$arrRequireAsyncCollection['res'][$strName]['uri'];
                 unset(self::$arrRequireAsyncCollection['res'][$strName]);
             }
-        } else {
-            //已经分析过的并且在其他文件里同步加载的组件，重新收集在同步输出组
-            self::$arrStaticCollection['js'][] = self::$arrRequireAsyncCollection['res'][$strName]['uri'];
-            unset(self::$arrRequireAsyncCollection['res'][$strName]);
-        }
-        if (isset($arrRes['deps'])) {
-            foreach ($arrRes['deps'] as $strDep) {
-                if (isset(self::$arrRequireAsyncCollection['res'][$strDep])) {
-                    self::delAsyncDeps($strDep);
+            if (isset($arrRes['deps'])) {
+                foreach ($arrRes['deps'] as $strDep) {
+                    if (isset(self::$arrRequireAsyncCollection['res'][$strDep])) {
+                        self::delAsyncDeps($strDep);
+                    }
                 }
             }
         }
@@ -272,13 +282,10 @@ class FISResource {
                         $strURI = $arrPkg['uri'];
                         foreach ($arrPkg['has'] as $strResId) {
                             self::$arrLoaded[$strResId] = $strURI;
-                        }
-                        foreach ($arrPkg['has'] as $strResId) {
                             $arrHasRes = &$arrMap['res'][$strResId];
-                            if ($arrHasRes) {
-                                $arrPkgHas[$strResId] = $arrHasRes;
-                                self::loadDeps($arrHasRes, $smarty, $async);
-                            }
+                            $arrPkgHas[$strResId] = $arrHasRes;
+                            self::loadDeps($arrHasRes, $smarty, $async);
+
                         }
                     } else {
                         $strURI = $arrRes['uri'];
