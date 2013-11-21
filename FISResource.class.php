@@ -118,15 +118,23 @@ class FISResource {
         return $html;
     }
 
-    public static function addScriptPool($str){
-        self::$arrScriptPool[] = $str;
+    public static function addScriptPool($str, $priority) {
+        $priority = intval($priority);
+        if (!isset(self::$arrScriptPool[$priority])) {
+            self::$arrScriptPool[$priority] = array();
+        }
+        self::$arrScriptPool[$priority][] = $str;
     }
 
     //输出js，将页面的js源代码集合到pool，一起输出
     public static function renderScriptPool(){
         $html = '';
-        if(!empty(self::$arrScriptPool)){
-            $html = '<script type="text/javascript">!function(){' . implode("}();\n!function(){", self::$arrScriptPool) . '}();</script>';
+        if(!empty(self::$arrScriptPool)) {
+            $priorities =  array_keys(self::$arrScriptPool);
+            rsort($priorities);
+            foreach ($priorities as $priority) {
+                $html .= '<script type="text/javascript">!function(){' . implode("}();\n!function(){", self::$arrScriptPool[$priority]) . '}();</script>';
+            }
         }
         return $html;
     }
@@ -226,8 +234,8 @@ class FISResource {
                     self::$arrStaticCollection['js'][] = $arrPkg['uri'];
                     unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
                     foreach ($arrPkg['has'] as $strHas) {
-                        self::$arrLoaded[$strName] = $arrPkg['uri'];
                         if (isset(self::$arrRequireAsyncCollection['res'][$strHas])) {
+                            self::$arrLoaded[$strName] = $arrPkg['uri'];
                             self::delAsyncDeps($strHas);
                         }
                     }
