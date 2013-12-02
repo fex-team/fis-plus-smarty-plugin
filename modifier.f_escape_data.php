@@ -1,18 +1,16 @@
 <?php
-function smarty_modifier_f_escape_data($str){
-	$str = strval($str);
-	$arr_js_char = array(
-		'<' => '&lt;',
-		'>' => '&gt;',
-		"'" => "\\&#39;",
-		'"' => '\\&quot;',
-		"\\" => "\\\\",
-		"\n" => "\\n",
-		"\r" => "\\r",
-		"/" => "\\/"
-	);
-    $patterns = array_keys($arr_js_char);
-    $targets = array_values($arr_js_char);
-    $ret =  str_replace($patterns, $targets, $str);
-	return $ret;
+global $fis_smarty_modifier_f_escape_data_js_char_keys;
+global $fis_smarty_modifier_f_escape_data_js_char_values;
+$fis_smarty_modifier_f_escape_data_js_char_keys = array('<','>',"'",'"','\\',"\n","\r","/");
+$fis_smarty_modifier_f_escape_data_js_char_values = array('&lt;','&gt;',"\\&#39;",'\\&quot;',"\\\\","\\n","\\r","\\/");
+
+function smarty_modifier_f_escape_data($str)
+{
+
+    global $fis_smarty_modifier_f_escape_data_js_char_keys;
+    global $fis_smarty_modifier_f_escape_data_js_char_values;
+
+    $str = strval($str);
+    $ret = str_replace($fis_smarty_modifier_f_escape_data_js_char_keys, $fis_smarty_modifier_f_escape_data_js_char_values, $str);
+    return $ret;
 }
