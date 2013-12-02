@@ -227,12 +227,25 @@ class FISResource {
             return true;
         } else {
             self::$arrAsyncDeleted[$strName] = true;
+
             $arrRes = self::$arrRequireAsyncCollection['res'][$strName];
+
+            //first deps
+            if (isset($arrRes['deps'])) {
+                foreach ($arrRes['deps'] as $strDep) {
+                    if (isset(self::$arrRequireAsyncCollection['res'][$strDep])) {
+                        self::delAsyncDeps($strDep);
+                    }
+                }
+            }
+
+            //second self
             if (isset($arrRes['pkg'])) {
                 $arrPkg = self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
                 if ($arrPkg) {
                     self::$arrStaticCollection['js'][] = $arrPkg['uri'];
-                    unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
+                    //@TODO
+                    //unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
                     foreach ($arrPkg['has'] as $strHas) {
                         if (isset(self::$arrRequireAsyncCollection['res'][$strHas])) {
                             self::$arrLoaded[$strName] = $arrPkg['uri'];
@@ -240,20 +253,15 @@ class FISResource {
                         }
                     }
                 } else {
-                    unset(self::$arrRequireAsyncCollection['res'][$strName]);
+                    //@TODO
+                    //unset(self::$arrRequireAsyncCollection['res'][$strName]);
                 }
             } else {
                 //已经分析过的并且在其他文件里同步加载的组件，重新收集在同步输出组
-                self::$arrStaticCollection['js'][] = self::$arrRequireAsyncCollection['res'][$strName]['uri'];
-                self::$arrLoaded[$strName] = self::$arrRequireAsyncCollection['res'][$strName]['uri'];
-                unset(self::$arrRequireAsyncCollection['res'][$strName]);
-            }
-            if (isset($arrRes['deps'])) {
-                foreach ($arrRes['deps'] as $strDep) {
-                    if (isset(self::$arrRequireAsyncCollection['res'][$strDep])) {
-                        self::delAsyncDeps($strDep);
-                    }
-                }
+                self::$arrStaticCollection['js'][] = $arrRes['uri'];
+                self::$arrLoaded[$strName] = $arrRes['uri'];
+                //@TODO
+                //unset(self::$arrRequireAsyncCollection['res'][$strName]);
             }
         }
     }
