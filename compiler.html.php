@@ -10,9 +10,15 @@ function smarty_compiler_html($arrParams,  $smarty){
         $strCode .= 'FISResource::setFramework(FISResource::getUri('.$strFramework.', $_smarty_tpl->smarty));';
     }
     $strCode .= ' ?>';
+
     foreach ($arrParams as $_key => $_value) {
-        $strAttr .= ' ' . $_key . '="<?php echo ' . $_value . ';?>"';
+        if (is_numeric($_key)) {
+            $strAttr .= ' <?php echo ' . $_value .';?>';
+        } else {
+            $strAttr .= ' ' . $_key . '="<?php echo ' . $_value . ';?>"';
+        }
     }
+
     return $strCode . "<html{$strAttr}>";
 }
 
