@@ -242,7 +242,8 @@ class FISResource {
             //second self
             if (isset($arrRes['pkg'])) {
                 $arrPkg = self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
-                if ($arrPkg && !in_array($arrPkg['uri'], self::$arrStaticCollection['js'])) {
+                $syncJs = isset(self::$arrStaticCollection['js']) ? self::$arrStaticCollection['js'] : array();
+                if ($arrPkg && !in_array($arrPkg['uri'], $syncJs)) {
                     self::$arrStaticCollection['js'][] = $arrPkg['uri'];
                     //@TODO
                     //unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
