@@ -8,7 +8,6 @@ npm cache clean
 npm update -g fis-plus
 cd ${FISP_PATH}
 npm install fis-preprocessor-inline
-npm install fis-parser-iknow-less
 cd ${TEST_PATH}
 sh release.sh
 sleep 2s
