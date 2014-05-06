@@ -4,6 +4,7 @@ class FISResource {
 
     const CSS_LINKS_HOOK = '<!--[FIS_CSS_LINKS_HOOK]-->';
     const JS_SCRIPT_HOOK = '<!--[FIS_JS_SCRIPT_HOOK]-->';
+    const FRAMEWORK_HOOK = '<!--[FIS_FRAMEWORK_HOOK]-->';
 
     private static $arrMap = array();
     private static $arrLoaded = array();
@@ -39,15 +40,32 @@ class FISResource {
         return self::JS_SCRIPT_HOOK;
     }
 
+    public static function placeHolder($mode){
+        $placeHolder = '';
+        switch ($mode) {
+            case 'modjs':
+                $placeHolder = self::FRAMEWORK_HOOK;
+                break;
+            default:
+                break;
+        }
+        return $placeHolder;
+    }
+
     //输出模板的最后，替换css hook为css标签集合,替换js hook为js代码
     public static function renderResponse($strContent){
         $cssIntPos = strpos($strContent, self::CSS_LINKS_HOOK);
         if($cssIntPos !== false){
             $strContent = substr_replace($strContent, self::render('css'), $cssIntPos, strlen(self::CSS_LINKS_HOOK));
         }
+        $frameworkIntPos = strpos($strContent, self::FRAMEWORK_HOOK);
+        if($frameworkIntPos !== false){
+            $strContent = substr_replace($strContent, self::render('framework'), $frameworkIntPos, strlen(self::FRAMEWORK_HOOK));
+        }
         $jsIntPos = strpos($strContent, self::JS_SCRIPT_HOOK);
         if($jsIntPos !== false){
-            $jsContent = self::render('js') . self::renderScriptPool();
+            $jsContent = ($frameworkIntPos !== false) ? '' : self::getModJsHtml(); 
+            $jsContent .= self::render('js') . self::renderScriptPool();
             $strContent = substr_replace($strContent, $jsContent, $jsIntPos, strlen(self::JS_SCRIPT_HOOK));
         }
         self::reset();
@@ -86,21 +104,26 @@ class FISResource {
         return $smarty->joined_template_dir . str_replace('/template', '', self::getUri($strName, $smarty));
     }
 
+    private static function getModJsHtml(){
+        $html = '';
+        $resourceMap = self::getResourceMap();
+        $loadModJs = (self::$framework && (isset(self::$arrStaticCollection['js']) || $resourceMap));
+        //require.resourceMap要在mod.js加载以后执行
+        if ($loadModJs) {
+            $html .= '<script type="text/javascript" src="' . self::$framework . '"></script>' . PHP_EOL;
+        }
+        if ($resourceMap) {
+            $html .= '<script type="text/javascript">';
+            $html .= 'require.resourceMap('.$resourceMap.');';
+            $html .= '</script>';
+        }
+        return $html;
+    }
+
     //渲染资源，将收集到的js css，变为html标签，异步js资源变为resorce map。
     public static function render($type){
         $html = '';
         if ($type === 'js') {
-            $resourceMap = self::getResourceMap();
-            $loadModJs = (self::$framework && (isset(self::$arrStaticCollection['js']) || $resourceMap));
-            //require.resourceMap要在mod.js加载以后执行
-            if ($loadModJs) {
-                $html .= '<script type="text/javascript" src="' . self::$framework . '"></script>' . PHP_EOL;
-            }
-            if ($resourceMap) {
-                $html .= '<script type="text/javascript">';
-                $html .= 'require.resourceMap('.$resourceMap.');';
-                $html .= '</script>';
-            }
             if (isset(self::$arrStaticCollection['js'])) {
                 $arrURIs = &self::$arrStaticCollection['js'];
                 foreach ($arrURIs as $uri) {
@@ -110,13 +133,19 @@ class FISResource {
                     $html .= '<script type="text/javascript" src="' . $uri . '"></script>' . PHP_EOL;
                 }
             }
-        } else if($type === 'css' && isset(self::$arrStaticCollection['css'])){
-            $arrURIs = &self::$arrStaticCollection['css'];
-            $html = '<link rel="stylesheet" type="text/css" href="' . implode('"/><link rel="stylesheet" type="text/css" href="', $arrURIs) . '"/>';
+        } else if($type === 'css'){
+            if(isset(self::$arrStaticCollection['css'])){
+                $arrURIs = &self::$arrStaticCollection['css'];
+                $html = '<link rel="stylesheet" type="text/css" href="' . implode('"/><link rel="stylesheet" type="text/css" href="', $arrURIs) . '"/>';
+            }
+        } else if($type === 'framework'){
+            $html .= self::getModJsHtml();
         }
 
         return $html;
     }
+
+    
 
     public static function addScriptPool($str, $priority) {
         $priority = intval($priority);
