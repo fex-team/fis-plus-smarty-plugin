@@ -32,6 +32,20 @@ class FISResource {
         self::$framework  = null;
     }
 
+    public static function addStatic($src) {
+        preg_match('/\.(\w+)(?:\?[\s\S]+)?$/', $src, $m);
+        if (!$m) {
+            return;
+        }
+        $typ = $m[1];
+        if (!in_array($src, self::$arrStaticCollection[$typ])) {
+            if (!is_array(self::$arrStaticCollection[$typ])) {
+                self::$arrStaticCollection[$typ] = array();
+            }
+            self::$arrStaticCollection[$typ][] = $src;
+        }
+    }
+
     public static function cssHook(){
         return self::CSS_LINKS_HOOK;
     }
