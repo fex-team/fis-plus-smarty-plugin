@@ -186,6 +186,7 @@ class FISResource {
     public static function getResourceMap() {
         $ret = '';
         $arrResourceMap = array();
+        $needPkg = !array_key_exists('fis_debug', $_GET);
         if (isset(self::$arrRequireAsyncCollection['res'])) {
             foreach (self::$arrRequireAsyncCollection['res'] as $id => $arrRes) {
                 $deps = array();
@@ -201,7 +202,7 @@ class FISResource {
                     'url' => $arrRes['uri'],
                 );
 
-                if (!empty($arrRes['pkg'])) {
+                if (!empty($arrRes['pkg']) && $needPkg) {
                     $arrResourceMap['res'][$id]['pkg'] = $arrRes['pkg'];
                 }
 
@@ -210,7 +211,7 @@ class FISResource {
                 }
             }
         }
-        if (isset(self::$arrRequireAsyncCollection['pkg'])) {
+        if (isset(self::$arrRequireAsyncCollection['pkg']) && $needPkg) {
             foreach (self::$arrRequireAsyncCollection['pkg'] as $id => $arrRes) {
                 $arrResourceMap['pkg'][$id] = array(
                     'url'=> $arrRes['uri']
