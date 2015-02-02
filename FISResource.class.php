@@ -38,10 +38,10 @@ class FISResource {
             return;
         }
         $typ = $m[1];
+        if (!is_array(self::$arrStaticCollection[$typ])) {
+            self::$arrStaticCollection[$typ] = array();
+        }
         if (!in_array($src, self::$arrStaticCollection[$typ])) {
-            if (!is_array(self::$arrStaticCollection[$typ])) {
-                self::$arrStaticCollection[$typ] = array();
-            }
             self::$arrStaticCollection[$typ][] = $src;
         }
     }
