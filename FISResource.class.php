@@ -266,7 +266,7 @@ class FISResource {
      * 已经分析到的组件在后续被同步使用时在异步组里删除。
      * @param $strName
      */
-    private static function delAsyncDeps($strName) {
+    private static function delAsyncDeps($strName, $onlyDeps = false) {
         if (isset(self::$arrAsyncDeleted[$strName])) {
             return true;
         } else {
@@ -283,20 +283,24 @@ class FISResource {
                 }
             }
 
+            if ($onlyDeps) {
+                return true;
+            }
+
             //second self
             if (isset($arrRes['pkg'])) {
                 $arrPkg = self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']];
                 $syncJs = isset(self::$arrStaticCollection['js']) ? self::$arrStaticCollection['js'] : array();
                 if ($arrPkg && !in_array($arrPkg['uri'], $syncJs)) {
-                    self::$arrStaticCollection['js'][] = $arrPkg['uri'];
                     //@TODO
                     //unset(self::$arrRequireAsyncCollection['pkg'][$arrRes['pkg']]);
                     foreach ($arrPkg['has'] as $strHas) {
                         if (isset(self::$arrRequireAsyncCollection['res'][$strHas])) {
                             self::$arrLoaded[$strName] = $arrPkg['uri'];
-                            self::delAsyncDeps($strHas);
+                            self::delAsyncDeps($strHas, true);
                         }
                     }
+                    self::$arrStaticCollection['js'][] = $arrPkg['uri'];
                 } else {
                     //@TODO
                     //unset(self::$arrRequireAsyncCollection['res'][$strName]);
