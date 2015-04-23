@@ -32,12 +32,21 @@ class FISResource {
         self::$framework  = null;
     }
 
-    public static function addStatic($src) {
-        preg_match('/\.(\w+)(?:\?[\s\S]+)?$/', $src, $m);
-        if (!$m) {
+    public static function addStatic($src, $typ) {
+        if (!$typ) {
+            preg_match('/\.(\w+)(?:\?[\s\S]+)?$/', $src, $m);
+            if (!$m) {
+                return;
+            }
+            $typ = $m[1];
+        }
+
+        $typ = trim($typ);
+
+        if (!in_array($type, array('js', 'css'))) {
             return;
         }
-        $typ = $m[1];
+
         if (!is_array(self::$arrStaticCollection[$typ])) {
             self::$arrStaticCollection[$typ] = array();
         }

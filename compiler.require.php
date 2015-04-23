@@ -3,6 +3,7 @@
 function smarty_compiler_require($arrParams,  $smarty){
     $strName = $arrParams['name'];
     $src = isset($arrParams['src']) ? $arrParams['src'] : false;
+    $type = isset($arrParams['type']) ? $arrParams['type'] : 'null';
     $async = 'false';
 
     if (isset($arrParams['async'])) {
@@ -18,8 +19,8 @@ function smarty_compiler_require($arrParams,  $smarty){
         $strCode .= '<?php if(!class_exists(\'FISResource\', false)){require_once(\'' . $strResourceApiPath . '\');}';
         if ($strName) {
             $strCode .= 'FISResource::load(' . $strName . ',$_smarty_tpl->smarty, '.$async.');';
-        } else {
-            $strCode .= 'FISResource::addStatic(' . $src . ');';
+        } else if (is_string($src)) {
+            $strCode .= 'FISResource::addStatic(' . $src . ', ' . $type . ');';
         }
         $strCode .= '?>';
     }
