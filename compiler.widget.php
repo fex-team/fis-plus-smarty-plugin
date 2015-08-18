@@ -54,6 +54,9 @@ function smarty_compiler_widget($arrParams,  $smarty){
     if($strName){
         $strCode .= '$_tpl_path=FISResource::getUri(' . $strName . ',$_smarty_tpl->smarty);';
         $strCode .= 'if(isset($_tpl_path)){';
+
+        $strCode .= 'if (array_key_exists(\'fis_debug\', $_GET)) {echo "<!--widget start '.str_replace("\"", '\"', $strName).'-->\n";}';
+
         if($bHasCall){
             $strCode .= '$_smarty_tpl->getSubTemplate($_tpl_path, $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, $_smarty_tpl->caching, $_smarty_tpl->cache_lifetime, ' . $strFuncParams . ', Smarty::SCOPE_LOCAL);';
             $strCode .= 'if(is_callable('. $strTplFuncName . ')){';
@@ -64,6 +67,9 @@ function smarty_compiler_widget($arrParams,  $smarty){
         } else {
             $strCode .= 'echo $_smarty_tpl->getSubTemplate($_tpl_path, $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, $_smarty_tpl->caching, $_smarty_tpl->cache_lifetime, ' . $strFuncParams . ', Smarty::SCOPE_LOCAL);';
         }
+
+        $strCode .= 'if (array_key_exists(\'fis_debug\', $_GET)) {echo "\n<!--widget end '.str_replace("\"", '\"', $strName).'-->";}';
+
         $strCode .= '}else{';
         $strCode .= 'trigger_error(\'unable to locale resource "\'.' . $strName . '.\'"\', E_USER_ERROR);';
         $strCode .= '}';
@@ -84,6 +90,9 @@ function getWidgetStrCode($path, $arrParams){
     $path = trim($path,"\"");
     $fn = '"smarty_template_function_fis_' . strtr(substr($path, 0, strrpos($path, '/')), '/', '_') . '"';
     $strCode = '<?php ';
+
+    $strCode .= 'if (array_key_exists(\'fis_debug\', $_GET)) {echo "<!--widget start '.str_replace("\"", '\"', $path).'-->\n";}';
+
     $strCode .= 'if(is_callable(' . $fn . ')){';
     $strCode .=     'return call_user_func(' . $fn . ',$_smarty_tpl,' . $strFuncParams . ');';
     $strCode .= '}else{';
@@ -93,6 +102,9 @@ function getWidgetStrCode($path, $arrParams){
     $strCode .=     '}else{';
     $strCode .=         'echo $fis_widget_output;';
     $strCode .=     '}';
+
+    $strCode .= 'if (array_key_exists(\'fis_debug\', $_GET)) {echo "\n<!--widget end '.str_replace("\"", '\"', $path).'-->";}';
+
     $strCode .= '}?>';
     return $strCode;
 }
