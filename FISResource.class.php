@@ -351,6 +351,11 @@ class FISResource {
                 $arrPkgHas = array();
                 if(isset($arrMap['res'][$strName])) {
                     $arrRes = &$arrMap['res'][$strName];
+
+                    if (array_key_exists('fis_debug', $_GET)) {
+                        echo '<!--"'.$strName.'" loaded-->'."\n";
+                    }
+
                     if(!array_key_exists('fis_debug', $_GET) && isset($arrRes['pkg'])){
                         $arrPkg = &$arrMap['pkg'][$arrRes['pkg']];
                         $strURI = $arrPkg['uri'];
