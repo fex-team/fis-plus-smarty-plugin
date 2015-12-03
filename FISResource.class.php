@@ -201,7 +201,7 @@ class FISResource {
                 $deps = array();
                 if (!empty($arrRes['deps'])) {
                     foreach ($arrRes['deps'] as $strName) {
-                        if (preg_match('/\.js$/i', $strName)) {
+                        if (preg_match('/\.(?:js|jsx|es6|ts|tsx|coffee)$/i', $strName)) {
                             $deps[] = $strName;
                         }
                     }
