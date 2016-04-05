@@ -87,7 +87,7 @@ class FISResource {
         }
         $jsIntPos = strpos($strContent, self::JS_SCRIPT_HOOK);
         if($jsIntPos !== false){
-            $jsContent = ($frameworkIntPos !== false) ? '' : self::getModJsHtml(); 
+            $jsContent = ($frameworkIntPos !== false) ? '' : self::getModJsHtml();
             $jsContent .= self::render('js') . self::renderScriptPool();
             $strContent = substr_replace($strContent, $jsContent, $jsIntPos, strlen(self::JS_SCRIPT_HOOK));
         }
@@ -168,7 +168,7 @@ class FISResource {
         return $html;
     }
 
-    
+
 
     public static function addScriptPool($str, $priority) {
         $priority = intval($priority);
@@ -196,12 +196,14 @@ class FISResource {
         $ret = '';
         $arrResourceMap = array();
         $needPkg = !array_key_exists('fis_debug', $_GET);
+        $res = self::$arrRequireAsyncCollection['res'];
+
         if (isset(self::$arrRequireAsyncCollection['res'])) {
-            foreach (self::$arrRequireAsyncCollection['res'] as $id => $arrRes) {
+            foreach ($res as $id => $arrRes) {
                 $deps = array();
                 if (!empty($arrRes['deps'])) {
                     foreach ($arrRes['deps'] as $strName) {
-                        if (preg_match('/\.(?:js|jsx|es|es6|es7|ts|tsx|coffee)$/i', $strName)) {
+                        if (preg_match('/\.(?:js|ejs|tmpl|jsx|es|es6|es7|ts|tsx|coffee)$/i', $strName) || $res[$strName] && $res[$strName]['type']==='js') {
                             $deps[] = $strName;
                         }
                     }
