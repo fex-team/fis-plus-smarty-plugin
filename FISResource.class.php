@@ -5,6 +5,8 @@ class FISResource {
     const CSS_LINKS_HOOK = '<!--[FIS_CSS_LINKS_HOOK]-->';
     const JS_SCRIPT_HOOK = '<!--[FIS_JS_SCRIPT_HOOK]-->';
     const FRAMEWORK_HOOK = '<!--[FIS_FRAMEWORK_HOOK]-->';
+    const COMBO_SERVER_URL = '//127.0.0.1:8080/static/';
+    const COMBO_MAX_COUNT = 15;//最多多少个combo文件
 
     private static $arrMap = array();
     private static $arrLoaded = array();
@@ -14,7 +16,8 @@ class FISResource {
     //收集require.async组件
     private static $arrRequireAsyncCollection = array();
     private static $arrScriptPool = array();
-
+    //设置渲染模式，inline表示要内嵌，tag表示用script标签引入
+    public static $renderMode = 'tag';
     public static $framework = null;
 
     //记录{%script%}, {%style%}的id属性
@@ -30,6 +33,7 @@ class FISResource {
         self::$arrStaticCollection = array();
         self::$arrScriptPool = array();
         self::$framework  = null;
+        self::$renderMode = 'tag';
     }
 
     public static function addStatic($src, $typ) {
@@ -63,6 +67,9 @@ class FISResource {
         return self::JS_SCRIPT_HOOK;
     }
 
+    public static function getComboUrl(){
+        return self::COMBO_SERVER_URL;
+    }
     public static function placeHolder($mode){
         $placeHolder = '';
         switch ($mode) {
@@ -98,6 +105,13 @@ class FISResource {
     //设置framewok mod.js
     public static function setFramework($strFramework) {
         self::$framework = $strFramework;
+    }
+    public static function setRenderMode($mode){
+        if(in_array($mode, array('combo', 'tag'))){
+            // 设置输出模式
+            self::$renderMode = $mode;
+        }
+
     }
 
     //返回静态资源uri，有包的时候，返回包的uri
@@ -147,20 +161,84 @@ class FISResource {
     public static function render($type){
         $html = '';
         if ($type === 'js') {
+            $loadModJs = self::$framework;
+            $staticArr = isset(self::$arrStaticCollection['js']) ? self::$arrStaticCollection['js'] : false;
             if (isset(self::$arrStaticCollection['js'])) {
                 $arrURIs = &self::$arrStaticCollection['js'];
-                foreach ($arrURIs as $uri) {
-                    if ($uri === self::$framework) {
-                        continue;
+                if(self::$renderMode ==='combo'){
+                    $jsComboArr = array();
+                    if ($loadModJs) {
+                        // 框架js
+                        $strPath = self::parseComboURI(self::getComboUrl(), self::$framework);
+                        $jsComboArr[] = $strPath;
                     }
-                    $html .= '<script type="text/javascript" src="' . $uri . '"></script>' . PHP_EOL;
+                    foreach ($arrURIs as $uri) {
+                        if ($uri['uri'] === self::$framework) {
+                            continue;
+                        }
+                        if(isset($uri['remote']) && $uri['remote']){
+                            //碰见线上url，先输出现有的combo
+                            if (!empty($jsComboArr)) {
+                                $html .= self::getComboHtml('js', $jsComboArr);
+                                //重设为空
+                                $jsComboArr = array();
+                            }
+                            $html .= '<script src="'.$uri['uri'].'"></script>' . PHP_EOL;
+                        }else{
+                            $strPath = self::parseComboURI(self::getComboUrl(), $uri['uri'], $uri['rUri']);
+
+                            $jsComboArr[] = $strPath;
+                        }
+
+                    }
+                    if (!empty($jsComboArr)) {
+                        $html .= self::getComboHtml('js', $jsComboArr);
+                    }
+                }else{
+                    foreach ($arrURIs as $uri) {
+                        if ($uri === $loadModJs) {
+                            continue;
+                        }
+                        $html .= '<script type="text/javascript" src="' . $uri . '"></script>' . PHP_EOL;
+                    }
                 }
+
             }
         } else if($type === 'css'){
             if(isset(self::$arrStaticCollection['css'])){
                 $arrURIs = &self::$arrStaticCollection['css'];
-                $html = '<link rel="stylesheet" type="text/css" href="' . implode('"/><link rel="stylesheet" type="text/css" href="', $arrURIs) . '"/>';
+
+                if (self::$renderMode === 'combo') {
+                    //嵌入模式
+                    $comboArr = array();
+                    foreach ($arrURIs as $uri) {
+
+                        if(isset($uri['remote']) && $uri['remote']){
+                            //碰见线上url，先输出现有的combo
+                            if (!empty($comboArr)) {
+
+                                $html .= self::getComboHtml('css', $comboArr);
+
+                                //重设为空
+                                $comboArr = array();
+                            }
+                            $html .= '<link rel="stylesheet" type="text/css" href="'.$uri['uri'].'" />' . PHP_EOL;
+                        }else{
+                            $strPath = self::parseComboURI(self::getComboUrl(), $uri['uri'], $uri['rUri']);
+                            $comboArr[] = $strPath;
+                        }
+                    }
+                    if (!empty($comboArr)) {
+                        $html .= self::getComboHtml('css', $comboArr);
+                    }
+                } else {
+                    $html = '';
+                    foreach ($arrURIs as $uri) {
+                        $html .= '<link rel="stylesheet" type="text/css" href="' . $uri['uri'] . '" />'. PHP_EOL;
+                    }
+                }
             }
+
         } else if($type === 'framework'){
             $html .= self::getModJsHtml();
         }
@@ -341,6 +419,21 @@ class FISResource {
             }
             return self::$arrLoaded[$strName];
         } else {
+            //处理remote Url
+            if (preg_match('/^(http|\/\/)/', $strName)) {
+                $path_parts = pathinfo($strName);
+                // var_dump($path_parts);// 去掉?得到纯粹的extension
+                $rExt = explode('?', $path_parts['extension']);
+                $rExt = $rExt[0];
+                $resource = array(
+                    'uri' => $strName,
+                    'content' => '',
+                    'remote' => true
+                );
+                self::$arrStaticCollection[$rExt][] = $resource;
+                return $resource;
+            }
+
             $intPos = strpos($strName, ':');
             if($intPos === false){
                 $strNamespace = '__global__';
@@ -353,6 +446,7 @@ class FISResource {
                 $arrPkgHas = array();
                 if(isset($arrMap['res'][$strName])) {
                     $arrRes = &$arrMap['res'][$strName];
+                    $hash = isset($arrRes['extras']['hash'])?$arrRes['extras']['hash']:'';
 
                     if (array_key_exists('fis_debug', $_GET)) {
                         echo '<!--"'.$strName.'" loaded-->'."\n";
@@ -374,6 +468,7 @@ class FISResource {
                         }
                     } else {
                         $strURI = $arrRes['uri'];
+                        $content = isset($arrRes['content']) ? $arrRes['content'] : '';
                         self::$arrLoaded[$strName] = $strURI;
                         self::loadDeps($arrRes, $smarty, $async);
                     }
@@ -386,9 +481,19 @@ class FISResource {
                             self::$arrRequireAsyncCollection['res'][$strName] = $arrRes;
                         }
                     } else {
-                        self::$arrStaticCollection[$arrRes['type']][] = $strURI;
+                        self::$arrStaticCollection[$arrRes['type']][] = array(
+                            'id' =>$strName,
+                            'uri' => $strURI,
+                            'content' => $content,
+                            'hash'=>$hash
+                        );
                     }
-                    return $strURI;
+                    return array(
+                        'id' =>$strName,
+                        'uri' => $strURI,
+                        'content' => $content,
+                        'hash'=>$hash
+                    );
                 } else {
                     self::triggerError($strName, 'undefined resource "' . $strName . '"', E_USER_NOTICE);
                 }
@@ -398,7 +503,75 @@ class FISResource {
         }
         self::triggerError($strName, 'unknown resource "' . $strName . '" load error', E_USER_NOTICE);
     }
+    public static function parseURI($uri){
+        $uri = preg_replace('/^http:\\/\\/(.*?)\\//', '/', $uri);
+        $uri = preg_replace('/[\\/\\\\]+/', '/', $uri);
+        return $uri;
+    }
+    public static function parseComboURI($comboUri, $uri, $rUri=null){
+        if($rUri==null){
+            $rUri = $uri;
+        }
 
+        if(preg_match('/^(http|\/\/)/', $uri)){
+            $comboRex = '/^'.self::str2Regex($comboUri).'[\/]?/';
+            $uri = preg_replace($comboRex, '', $uri);
+        }else{
+        }
+
+        return $uri;
+    }
+    public static function str2Regex($str) {
+        $arr = array(
+            '.'=>'\.',
+            '-'=>'\-',
+            '/'=>'\/'
+        );
+        return str_replace(array_keys($arr), array_values($arr), $str);
+    }
+
+    public static function getComboHtml($type, $uriArr, $comboUri = ''){
+        if(!in_array($type, array('js', 'css')) || empty($uriArr)){
+            return '';
+        }
+        if(empty($comboUri)){
+            $comboUri = self::getComboUrl();
+        }
+        $maxCount = self::COMBO_MAX_COUNT;
+        $html = '';
+
+        $arr = array();
+        $count = 0;
+        $tmpArray = array();
+        foreach($uriArr as $i=>$uri){
+            $count++;
+            $tmpArray[] = $uri;
+            if($maxCount===$count){
+                $count = 0;
+                $arr[] = $tmpArray;
+                $tmpArray = array();
+            }
+        }
+        if(!empty($tmpArray)){
+            $arr[] = $tmpArray;
+        }
+
+        if($type==='css'){
+
+            foreach($arr as $comboArr){
+                $combourl = $comboUri.'??'.join(',', $comboArr);
+                $html .= '<link rel="stylesheet" type="text/css" href="' . $combourl . '" />' . PHP_EOL;
+            }
+        }elseif($type==='js'){
+            foreach($arr as $comboArr){
+                $combourl = $comboUri.'??'.join(',', $comboArr);
+                $html .= '<script src="' . $combourl . '"></script>' . PHP_EOL;
+            }
+        }
+
+        return $html;
+
+    }
     /**
      * 用户代码自定义js组件，其没有对应的文件
      * 只有有后缀的组件找不到时进行报错
