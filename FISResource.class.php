@@ -5,7 +5,7 @@ class FISResource {
     const CSS_LINKS_HOOK = '<!--[FIS_CSS_LINKS_HOOK]-->';
     const JS_SCRIPT_HOOK = '<!--[FIS_JS_SCRIPT_HOOK]-->';
     const FRAMEWORK_HOOK = '<!--[FIS_FRAMEWORK_HOOK]-->';
-    const COMBO_SERVER_URL = '//127.0.0.1:8080/static/';
+    const COMBO_SERVER_URL = '<!--[COMBO_SEVER_URL]-->';
     const COMBO_MAX_COUNT = 15;//最多多少个combo文件
 
     private static $arrMap = array();
@@ -199,7 +199,7 @@ class FISResource {
                         if ($uri === $loadModJs) {
                             continue;
                         }
-                        $html .= '<script type="text/javascript" src="' . $uri . '"></script>' . PHP_EOL;
+                        $html .= '<script type="text/javascript" src="' . $uri['uri'] . '"></script>' . PHP_EOL;
                     }
                 }
 
