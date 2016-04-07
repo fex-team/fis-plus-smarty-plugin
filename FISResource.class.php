@@ -286,10 +286,14 @@ class FISResource {
                         }
                     }
                 }
-
-                $arrResourceMap['res'][$id] = array(
+                $arr = array(
                     'url' => $arrRes['uri'],
                 );
+                // 添加md5值
+                if(isset($arrRes['extras']['hash'])){
+                    $arr['hash'] = $arrRes['extras']['hash'];
+                }
+                $arrResourceMap['res'][$id] = $arr;
 
                 if (!empty($arrRes['pkg']) && $needPkg) {
                     $arrResourceMap['res'][$id]['pkg'] = $arrRes['pkg'];
