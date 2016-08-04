@@ -78,20 +78,6 @@ class FISResource {
         return $placeHolder;
     }
 
-    public static function loadI18n($smarty) {
-        $ret = array();
-        foreach (self::$arrMap as $strNamespace => $map) {
-            $tansId = $strNamespace . ':widget/fis_translate.tpl';
-            if (isset($map['res']) && isset($map['res'][$tansId])) {
-                $res = $map['res'][$tansId];
-                $output= $smarty->fetch($res['uri']);
-                $ret[] = $output;
-            }
-        }
-        return implode('', $ret);
-    }
-
-
     //输出模板的最后，替换css hook为css标签集合,替换js hook为js代码
     public static function renderResponse($strContent){
         $cssIntPos = strpos($strContent, self::CSS_LINKS_HOOK);
