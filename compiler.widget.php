@@ -43,43 +43,40 @@ function smarty_compiler_widget($arrParams,  $smarty){
 
     if($bHasCall){
         unset($arrParams['call']);
-        $strTplFuncName = '\'smarty_template_function_\'.' . $strCall;
-        $strCallTplFunc = 'call_user_func('. $strTplFuncName . ',$_smarty_tpl,' . $strFuncParams . ');';
-
-        $strCode .= 'if(is_callable('. $strTplFuncName . ')){';
-        $strCode .= $strCallTplFunc;
-        $strCode .= '}else{';
+        $strCode .= 'if (function_exists($_smarty_tpl->ext->_tplFunction->getTplFunction('. $strCall .'))) {';
+        $strCode .= '$_smarty_tpl->ext->_tplFunction->callTemplateFunction($_smarty_tpl, ' . $strCall . ', ' . $strFuncParams . ');';
+        $strCode .= '} else {';
     }
 
     if($strName){
         $strCode .= '$_tpl_path=FISResource::getUri(' . $strName . ',$_smarty_tpl->smarty);';
-        $strCode .= 'if(isset($_tpl_path)){';
+        $strCode .= 'if(isset($_tpl_path)) {';
 
-        $strCode .= 'if (array_key_exists(\'fis_debug\', $_GET)) {echo "<!--widget start '.str_replace("\"", '\"', $strName).'-->\n";}';
+        $strCode .= 'if (array_key_exists(\'fis_debug\', $_GET)) {
+                        echo "<!--widget start '.str_replace("\"", '\"', $strName).'-->\n";
+                    }';
 
         if($bHasCall){
-            $strCode .= '$_smarty_tpl->getSubTemplate($_tpl_path, $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, $_smarty_tpl->caching, $_smarty_tpl->cache_lifetime, ' . $strFuncParams . ', Smarty::SCOPE_LOCAL);';
-            $strCode .= 'if(is_callable('. $strTplFuncName . ')){';
-            $strCode .= $strCallTplFunc;
-            $strCode .= '}else{';
-            $strCode .= 'trigger_error(\'missing function define "\'.' . $strTplFuncName . '.\'" in tpl "\'.$_tpl_path.\'"\', E_USER_ERROR);';
-            $strCode .= '}';
+            $strCode .= '$_smarty_tpl->_subTemplateRender($_tpl_path, $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, $_smarty_tpl->caching, $_smarty_tpl->cache_lifetime, ' . $strFuncParams . ', Smarty::SCOPE_LOCAL);';
+            $strCode .= '$_smarty_tpl->ext->_tplFunction->callTemplateFunction($_smarty_tpl, ' . $strCall . ', ' . $strFuncParams . ');';
         } else {
-            $strCode .= 'echo $_smarty_tpl->getSubTemplate($_tpl_path, $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, $_smarty_tpl->caching, $_smarty_tpl->cache_lifetime, ' . $strFuncParams . ', Smarty::SCOPE_LOCAL);';
+            $strCode .= 'echo $_smarty_tpl->_subTemplateRender($_tpl_path, $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, $_smarty_tpl->caching, $_smarty_tpl->cache_lifetime, ' . $strFuncParams . ', Smarty::SCOPE_LOCAL);';
         }
 
         $strCode .= 'if (array_key_exists(\'fis_debug\', $_GET)) {echo "\n<!--widget end '.str_replace("\"", '\"', $strName).'-->";}';
 
-        $strCode .= '}else{';
-        $strCode .= 'trigger_error(\'unable to locale resource "\'.' . $strName . '.\'"\', E_USER_ERROR);';
+        $strCode .= '} else {';
+        $strCode .= ' trigger_error(\'unable to locale resource "\'.' . $strName . '.\'"\', E_USER_ERROR);';
         $strCode .= '}';
         $strCode .= 'FISResource::load('.$strName.', $_smarty_tpl->smarty);';
     } else {
         trigger_error('undefined widget name in file "' . $smarty->_current_file . '"', E_USER_ERROR);
     }
-    if($bHasCall){
+
+    if ($bHasCall) {
         $strCode .= '}';
     }
+
     $strCode .= '?>';
     return $strCode;
 }
@@ -96,7 +93,7 @@ function getWidgetStrCode($path, $arrParams){
     $strCode .= 'if(is_callable(' . $fn . ')){';
     $strCode .=     'return call_user_func(' . $fn . ',$_smarty_tpl,' . $strFuncParams . ');';
     $strCode .= '}else{';
-    $strCode .=     '$fis_widget_output = $_smarty_tpl->getSubTemplate("' . $path . '", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, null, null, '. $strFuncParams.', Smarty::SCOPE_LOCAL);';
+    $strCode .=     '$fis_widget_output = $_smarty_tpl->_subTemplateRender("' . $path . '", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, null, null, '. $strFuncParams.', Smarty::SCOPE_LOCAL);';
     $strCode .=     'if(is_callable(' . $fn .')){';
     $strCode .=         'return call_user_func('. $fn . ',$_smarty_tpl,' . $strFuncParams . ');';
     $strCode .=     '}else{';
