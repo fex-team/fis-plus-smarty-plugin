@@ -28,6 +28,8 @@ class FISResource {
         self::$arrLoaded = array();
         self::$arrAsyncDeleted = array();
         self::$arrStaticCollection = array();
+        // 常驻进程时，此变量需要销毁
+        self::$arrRequireAsyncCollection = array();
         self::$arrScriptPool = array();
         self::$framework  = null;
     }
@@ -43,7 +45,8 @@ class FISResource {
 
         $typ = trim($typ);
 
-        if (!in_array($type, array('js', 'css'))) {
+        // 变量写错
+        if (!in_array($typ, array('js', 'css'))) {
             return;
         }
 
@@ -87,7 +90,7 @@ class FISResource {
         }
         $jsIntPos = strpos($strContent, self::JS_SCRIPT_HOOK);
         if($jsIntPos !== false){
-            $jsContent = ($frameworkIntPos !== false) ? '' : self::getModJsHtml(); 
+            $jsContent = ($frameworkIntPos !== false) ? '' : self::getModJsHtml();
             $jsContent .= self::render('js') . self::renderScriptPool();
             $strContent = substr_replace($strContent, $jsContent, $jsIntPos, strlen(self::JS_SCRIPT_HOOK));
         }
@@ -168,7 +171,7 @@ class FISResource {
         return $html;
     }
 
-    
+
 
     public static function addScriptPool($str, $priority) {
         $priority = intval($priority);
