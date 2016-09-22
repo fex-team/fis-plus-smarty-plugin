@@ -23,7 +23,7 @@ function smarty_compiler_html($arrParams,  $smarty){
      * Date: 2016-07-21
      * Author: raisezhang@hotmail.com
      */
-    $strCode = '<?php ';
+    $strCode .= '<?php ';
     $strCode .= '$_smarty_tpl->unregisterFilter(\'output\', array(\'FISResource\', \'renderResponse\'));';
     $strCode .= '?>';
 
