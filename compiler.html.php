@@ -3,12 +3,21 @@ function smarty_compiler_html($arrParams,  $smarty){
     $strResourceApiPath = preg_replace('/[\\/\\\\]+/', '/', dirname(__FILE__) . '/FISResource.class.php');
     $strFramework = $arrParams['framework'];
     unset($arrParams['framework']);
+    $rendermode = isset($arrParams['rendermode']) ? $arrParams['rendermode'] : false;
+    unset($arrParams['rendermode']);
+
     $strAttr = '';
     $strCode  = '<?php ';
     if (isset($strFramework)) {
         $strCode .= 'if(!class_exists(\'FISResource\', false)){require_once(\'' . $strResourceApiPath . '\');}';
         $strCode .= 'FISResource::setFramework(FISResource::getUri('.$strFramework.', $_smarty_tpl->smarty));';
     }
+    if ($rendermode) {
+        $strCode .= 'if(!class_exists(\'FISResource\', false)){require_once(\'' . $strResourceApiPath . '\');}';
+        $strCode .= 'FISResource::setRenderMode(' . $rendermode . ');';
+    }
+
+
     $strCode .= ' ?>';
 
     foreach ($arrParams as $_key => $_value) {
