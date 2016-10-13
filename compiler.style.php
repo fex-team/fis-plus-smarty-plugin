@@ -19,11 +19,11 @@ function smarty_compiler_styleclose($params,  $smarty){
     $strCode .= 'if(!class_exists(\'FISResource\', false)){require_once(\'' . $strResourceApiPath . '\');}';
     $strCode .=     'if(FISResource::$cp){';
     $strCode .=         'if (!in_array(FISResource::$cp, FISResource::$arrEmbeded)){';
-    $strCode .=             'echo "<style type=\'text/css\'>" . $style . "</style>";';
+    $strCode .=             'FISResource::addStylePool($style);';
     $strCode .=             'FISResource::$arrEmbeded[] = FISResource::$cp;';
     $strCode .=         '}';
     $strCode .=     '} else {';
-    $strCode .=         'echo "<style type=\'text/css\'>" . $style . "</style>";';
+    $strCode .=         'FISResource::addStylePool($style);';
     $strCode .=     '}';
     $strCode .= '}';
     $strCode .= 'FISResource::$cp = false;?>';
