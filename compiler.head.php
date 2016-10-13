@@ -13,6 +13,7 @@ function smarty_compiler_headclose($arrParams,  $smarty){
     $strCode = '<?php ';
     $strCode .= 'if(!class_exists(\'FISResource\', false)){require_once(\'' . $strResourceApiPath . '\');}';
     $strCode .= 'echo FISResource::cssHook();';
+    $strCode .= 'echo FISResource::styleHook();';
     $strCode .= '?>';
     $strCode .= '</head>';
     return $strCode;
