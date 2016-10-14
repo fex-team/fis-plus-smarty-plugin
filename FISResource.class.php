@@ -5,6 +5,7 @@ class FISResource {
     const CSS_LINKS_HOOK = '<!--[FIS_CSS_LINKS_HOOK]-->';
     const JS_SCRIPT_HOOK = '<!--[FIS_JS_SCRIPT_HOOK]-->';
     const FRAMEWORK_HOOK = '<!--[FIS_FRAMEWORK_HOOK]-->';
+    const CSS_STYLE_HOOK = '<!--[FIS_CSS_STYLE_HOOK]-->';
 
     private static $arrMap = array();
     private static $arrLoaded = array();
@@ -14,6 +15,7 @@ class FISResource {
     //收集require.async组件
     private static $arrRequireAsyncCollection = array();
     private static $arrScriptPool = array();
+    private static $arrStylePool = array();
 
     public static $framework = null;
 
@@ -31,6 +33,7 @@ class FISResource {
         // 常驻进程时，此变量需要销毁
         self::$arrRequireAsyncCollection = array();
         self::$arrScriptPool = array();
+        self::$arrStylePool = array();  
         self::$framework  = null;
     }
 
@@ -58,6 +61,10 @@ class FISResource {
         }
     }
 
+    public static function styleHook(){
+        return self::CSS_STYLE_HOOK;
+    }
+
     public static function cssHook(){
         return self::CSS_LINKS_HOOK;
     }
@@ -83,6 +90,10 @@ class FISResource {
         $cssIntPos = strpos($strContent, self::CSS_LINKS_HOOK);
         if($cssIntPos !== false){
             $strContent = substr_replace($strContent, self::render('css'), $cssIntPos, strlen(self::CSS_LINKS_HOOK));
+        }
+        $styleIntPos = strpos($strContent, self::CSS_STYLE_HOOK);
+        if($styleIntPos !== false){
+            $strContent = substr_replace($strContent, self::renderStylePool(), $styleIntPos, strlen(self::CSS_STYLE_HOOK));
         }
         $frameworkIntPos = strpos($strContent, self::FRAMEWORK_HOOK);
         if($frameworkIntPos !== false){
@@ -171,7 +182,18 @@ class FISResource {
         return $html;
     }
 
+    // fix issues https://github.com/fex-team/fis-plus-smarty-plugin/issues/6
+    public static function addStylePool($code) {
+        self::$arrStylePool[] = $code;
+    }
 
+    //输出css，将页面的css源代码集合到pool，一起输出
+    public static function renderStylePool(){
+        $style = '<style>';
+        $style .= implode('', self::$arrStylePool);
+        $style .= '</style>';
+        return $style;
+    }
 
     public static function addScriptPool($str, $priority) {
         $priority = intval($priority);
